@@ -4,6 +4,6 @@
 # Khi thêm vào file .gitignore, IDE sẽ nhận biết các module thuộc .gitignore và loại trừ hiển thị "Diff - Changes"
 # Chúng ta chỉ thêm vào file .gitattributes để đảm bảo IDE vẫn quét module và không bị commit trong repo "root"
 
-/tour-admin/ export-ignore
-/tour-backend/ export-ignore
-/tour-client/ export-ignore
+/tour-admin/        export-ignore
+/tour-backend/      export-ignore
+/tour-client/       export-ignore
