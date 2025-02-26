@@ -1,0 +1,95 @@
+name: tour-project
+
+services:
+##   Admin Frontend (Next.js)
+#  tour-admin:
+#    build:
+#      context: ../tour-admin
+#      dockerfile: ../docker/tour-client.Dockerfile
+#    ports:
+#      - "3001:3000"
+#    volumes:
+#      - ../tour-admin:/app
+#      - /app/node_modules
+#    environment:
+#      - NODE_ENV=development
+#      - NEXT_PUBLIC_API_URL=http://tour-backend:8080
+#    depends_on:
+#      - tour-backend
+
+  # Client Frontend (Next.js)
+  tour-client:
+    build:
+      context: ../tour-client
+      dockerfile: ../docker/tour-client.Dockerfile
+    ports:
+      - "8002:8002"
+    volumes:
+      - ../tour-client:/app
+      - node_modules:/app/node_modules
+
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://tour-backend:8080
+    depends_on:
+      - tour-backend
+
+  # Backend service (Spring Boot)
+  tour-backend:
+    build:
+      context: ../tour-backend
+      dockerfile: ../docker/tour-backend.Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/tourdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Database service
+  postgres-db:
+    image: postgres:17.4-alpine3.21
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=tourdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis service
+  redis:
+    image: redis:alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+  node_modules:
+
+networks:
+  default:
+    name: tour_network
